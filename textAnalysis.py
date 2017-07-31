@@ -25,14 +25,19 @@ from litigant import litigant
 ####    print("*"*100)
 ##    return temp
 
+defendant_re = re.compile(r'^\s*被告人(?!.{5,10}一案).*?[，。]|^被告人.*?（.*?）[，。]')
+defender_re = re.compile(r'^辩护人.{2,3}[，|。]')
+suing_re = re.compile(r'向本院提起公诉[，|。]')
+zhikong_start_re = re.compile(r'^\s*?.*?指控称?[：|，]')
+zhikong_end_list = [r'提请本院.*?(?:惩|判)处[，。]',r'定罪量刑[，。]',r'被告人.*?辩称',r'.*?异议.*?',r'^被告人的辩护人认为',r'^\s*?(?:本院)?经(?:本院)(?:法庭)?审理.*?查明.*?[：|，]',r'^上述事实',r'被告人.*?交代了.*?事实']
+
 class paragraph(object):
     no = None
     text = None
     ctype = None
-    
-    
 
-def paragraphing(content_html):
+
+def paragraphing(content_html, content_progress):
     paragraphs = []
     soup = BeautifulSoup(content_html, 'html.parser')
     for i, div in enumerate(soup.find_all('div')):
@@ -40,7 +45,43 @@ def paragraphing(content_html):
         para.no = i
         para.text = div.string
         paragraphs.append(para)
+    set_paragraph_ctype(paragraphs, content_progress)
     return paragraphs
+
+def set_paragraph_ctype(paragraphs, content_progress):
+    if content_progress == "一审":
+        set_paragraph_ctype_FI(paragraphs)
+
+def set_paragraph_ctype_FI(paragraphs):
+    for i, para in enumerate(paragraphs):
+        #（一）首部
+        #3、（3）被告人的基本情况
+        if defendant_re.search(para.text):
+            para.ctype = "被告人的基本情况"
+        #3、（4）辩护人的基本情况
+        elif defender_re.search(para.text):
+            para.ctype = "辩护人的基本情况"
+        #4、案由（1）公诉案件
+        elif suing_re.search(para.text):
+            para.ctype = "案由(公诉案件)"
+            
+    for i, para in enumerate(paragraphs):
+        #（二）事实
+        #1、检察院指控
+        if zhikong_start_re(para.text):
+            para.ctype = "检察院指控"
+        elif zhikong_end(para.text) and paragraphs[i-1].ctype == "检察院指控":
+            break
+        else:
+            para.ctype = "检察院指控"
+
+def zhikong_end(text):
+    for zhikong_end in zhikong_end_re_list:
+        zhikong_end_re = re.compile(zhikong_end)
+        if zhikong_end_re.search(text):
+            return True
+    return False
+        
 
 def get_litigants_FI(paragraphs):
     for i, paragraph in enumerate(paragraphs):
