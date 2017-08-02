@@ -252,12 +252,12 @@ def  get_time(time_list,money_list,text):
                 if i==len(time_list)-1:
                     temp.append(time_list[i])
                     break
-                else:
+            else:
          #                       print('2-2')
-                    i=i+1
-                    if i==len(time_list)-1:
-                        temp.append(time_list[i])
-                        break
+                i=i+1
+                if i==len(time_list)-1:
+                    temp.append(time_list[i])
+                    break
    #     print('can out')
     return temp
                                 
@@ -268,8 +268,8 @@ def  get_criminal_time(raw_list):
     for text in raw_list:
         time_list=re.findall(r'\d+年.{0,2}月?至\d+年|\d+年',text)
         money_list=re.findall(r'\d+[，.]{0,1}\d*余?元(?![月旦])|\d+[，.]{0,1}\d*万元(?![月旦])',text)
-      #          print(time_list)
-      #          print(money_list)
+        #print(time_list)
+        #print(money_list)
         if time_list==[] or money_list==[]:
             continue
         if len(time_list)==1:
@@ -277,10 +277,10 @@ def  get_criminal_time(raw_list):
         else:
             time_list=get_time(time_list,money_list,text)
             temp=temp+time_list
-        if temp!=[]:
-            for i in range(0,len(temp)):
-                if temp[i] not in final:
-                    final.append(temp[i])
+    if temp!=[]:
+        for i in range(0,len(temp)):
+            if temp[i] not in final:
+                final.append(temp[i])
     return final
                 
         
@@ -404,7 +404,7 @@ def  get_workplace(text):
     temp=[]
     final=[]
     workplace=[]
-    with open('职位职务名称.txt','rt')  as f:
+    with open('position.txt','rt')  as f:
         data=f.read().split()
     for work in data:
         if  work in text:
@@ -434,7 +434,7 @@ def  get_workplace(text):
         workplace=final
     if workplace==[]:
         workplace=['']
-    print(workplace)
+    #print(workplace)
     return workplace
 
 
@@ -473,6 +473,7 @@ def cleanOneDoc(result):
     #二审所需初始化
                 
     temp=re.findall('<div.*?>(.*?)</div>',result[1],re.M)
+    #print(temp)
                 
     if result[2]=='一审':
         criminal_time=[]
@@ -484,6 +485,7 @@ def cleanOneDoc(result):
         delete_index=float('inf')
 
         defendant_list=divide(temp,defendant_re)
+        
         defender_list=divide(temp,defender_re)
         suing_list=divide(temp,suing_re)
         zhikong_list=get_short_charge(temp,zhikong_re,zhikong_re_list)
@@ -495,18 +497,23 @@ def cleanOneDoc(result):
         for j in range(0,len(defendant_list)):
             defendant.append(get_defendant(defendant_list[j]))
         defendant=get_final_defendant(defendant)
-                        
+        #print(defendant_list)
+        #print(defendant)     
         if zhikong_list!=[]:
             criminal_time=get_criminal_time(zhikong_list)
+        #print("criminal_time1: %s"%criminal_time)
                       
         if criminal_time==[]:
             shenli_list=divide(temp,shenli_re,shenli_re1)
+            #print("criminal_time2: %s"%criminal_time)
             if shenli_list!=[]:
                 criminal_time=get_criminal_time(shenli_list)
+        #print("criminal_time3: %s"%criminal_time)
         for n in range(0,len(defendant)):
             defendant[n]=defendant[n]+get_criminal_year(criminal_time)
                         
         panjue_list=divide(temp,panjue_re,panjue_re1)
+        #print("panjue_list", panjue_list)
         if panjue_list!=[]:
             panjue_list.reverse()
             throw=panjue_list.pop()
@@ -516,7 +523,7 @@ def cleanOneDoc(result):
             total_money=get_totalmoney1(get_criminal_money(panjue_list))
         else:
             total_money=get_totalmoney2(get_criminal_money(panjue_list),len(defendant))
-  
+        
         if defendant!=[]:                  
             if len(defendant)==len(panjue) :
                 for j in range(0,len(panjue)):
@@ -534,7 +541,7 @@ def cleanOneDoc(result):
                 for j in range(0,len(defendant)):
                     defendant[j]=defendant[j]+['']
                         
-
+        #print(defendant)    
     if result[2]=='二审':
         yuanpan_list=[] 
         defendant_list=divide(temp,defendant_re_2)
@@ -587,8 +594,9 @@ def cleanOneDoc(result):
 
 def cleanAllDoc(results):
     total_defendant = []
-    for result in results:
-        cleanOneDoc(result)
+    for i, result in enumerate(results):
+        print(i)
+        defendant = cleanOneDoc(result)
         total_defendant = total_defendant + defendant
     return total_defendant
 
