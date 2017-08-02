@@ -10,9 +10,11 @@ from sqlalchemy.ext.automap import automap_base
 import judgement
 import textAnalysis
 
+from config import * 
+
 print('hi')
 
-engine=create_engine("mysql+pymysql://root:123456@127.0.0.1:3306/wenshu_corruption?charset=utf8", max_overflow=5)
+engine = create_engine(database_name, max_overflow=5)
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
@@ -33,10 +35,10 @@ for i,aj in enumerate(anjian_list):
         #print(cj.content_html)
         print(cj.docid)
         #print(cj.paragraphs)
-        for paragraph in cj.paragraphs:
-            print(paragraph.no)
-            print(paragraph.text)
-            print(paragraph.ctype)
+##        for paragraph in cj.paragraphs:
+##            print(paragraph.no)
+##            print(paragraph.text)
+##            print(paragraph.ctype)
         #    print(jieba.lcut(paragraph))
         
         #for j in cj.litigant_list:
